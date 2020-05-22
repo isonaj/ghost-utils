@@ -1,0 +1,1 @@
+docker run -p 5050:2368 -v ghost:/var/lib/ghost ghost:3.2.0-alpine

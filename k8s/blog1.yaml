@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog1
+  namespace: blogs
+spec:
+  type: NodePort
+  selector:
+    app: blog1
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 2368
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blog1
+  namespace: blogs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: default
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: blog1
+  labels:
+    app: blog1
+  namespace: blogs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blog1
+  template:
+    metadata:
+      labels:
+        app: blog1
+      namespace: blogs
+    spec:
+      containers:
+      - name: ghost
+        image: ghost:3.2.0-alpine
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 2368
+        env:
+        - name: url
+          value: http://blog1.com
+        volumeMounts:
+        - mountPath: /var/lib/ghost/content
+          name: content
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: content
+        persistentVolumeClaim:
+          claimName: blog1
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  name: blog1
+  namespace: blogs
+spec:
+  rules:
+  - host: blog1.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: blog1
+          servicePort: 80
+  - host: www.blog1.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: blog1
+          servicePort: 80
+  tls: # < placing a host in the TLS config will indicate a certificate should be created
+  - hosts:
+    - blog1.com
+    - www.blog1.com
+    secretName: blog1

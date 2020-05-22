@@ -1,0 +1,1 @@
+kubectl cp -n blogs anthonyison-86d87db9f9-p2bh6:/var/lib/ghost/content content

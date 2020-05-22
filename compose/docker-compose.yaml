@@ -1,0 +1,50 @@
+version: '3.2'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/nginx:/etc/nginx/conf.d
+#      - ./data/certbot/conf:/etc/letsencrypt
+#      - ./data/certbot/www:/var/www/certbot
+#  certbot:
+#    image: certbot/certbot
+#    volumes:
+#      - ./data/certbot/conf:/etc/letsencrypt
+#      - ./data/certbot/www:/var/www/certbot
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+#    ports:
+#      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: MyRootPassword!
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: blog-user
+      MYSQL_PASSWORD: supersecret
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+
+  ghost:
+    image: ghost:alpine
+    restart: always
+    depends_on: 
+      - mysql
+    ports:
+      - 2368:2368
+    volumes:
+      - ./data/ghost:/var/lib/ghost/content
+#    volumes:
+#      - ./content:/var/lib/ghost/content
+#      - ./config.production.json:/var/lib/ghost/config.production.json
+    environment:
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: blog-user
+      database__connection__password: supersecret
+      database__connection__database: ghost
+      

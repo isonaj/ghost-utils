@@ -1,0 +1,1 @@
+az aks create -g artisansoftware -n artisansoftware --node-count 1 --generate-ssh-keys --node-vm-size Standard_B2s --node-osdisk-size 30
